@@ -1,11 +1,17 @@
-sudo: false
 language: ruby
+sudo: false
+cache: bundler
 install: script/bootstrap
 script: script/test
 rvm:
-  - 1.9.3
   - 2.0.0
+  - 2.1.0
+  - 2.1.5
+  - 2.2.0
+  - 2.2.1
+  - 2.2.2
   - 2.2.3
+  - rbx-2
   - ruby-head
   - jruby-18mode
   - jruby-19mode
@@ -25,3 +31,6 @@ env:
   matrix:
     - HURLEY_SSL=no
     - HURLEY_SSL=yes
+
+notifications:
+  email: false
