@@ -1,8 +1,8 @@
-require "typhoeus"
+require 'typhoeus'
 
 module HurleyTyphoeus
   VERSION = '0.0.1'
-  DEFAULT_CHUNK_SIZE = 1048576
+  DEFAULT_CHUNK_SIZE = 1_048_576
 
   class Connection
     def initialize(options = nil)
@@ -24,7 +24,7 @@ module HurleyTyphoeus
       end
     end
 
-    def perform(res, options)
+    def perform(res, _options)
       req = res.request
 
       req_options = {
@@ -34,17 +34,17 @@ module HurleyTyphoeus
 
       request = Typhoeus::Request.new(req.url.to_s, req_options)
 
-      if body = req.body_io
-        request.on_body do |chunk|
-          body.read(HurleyTyphoeus::DEFAULT_CHUNK_SIZE)
-        end
+      request.on_complete do |response|
+        raise Hurley::Timeout, 'The request time' if response.timed_out?
       end
 
-      request.run
+      if body = req.body_io
+        body.read(HurleyTyphoeus::DEFAULT_CHUNK_SIZE).to_s
+      end
+
+      response = request.run
     rescue ::Typhoeus::Errors::TyphoeusError => err
-      if err.message =~ /\btimeout\b/
-        raise Hurley::Timeout, err
-      elsif err.message =~ /\bcertificate\b/
+      if err.message =~ /\bcertificate\b/
         raise Hurley::SSLError, err
       else
         raise Hurley::ConnectionFailed, err
@@ -63,7 +63,6 @@ module HurleyTyphoeus
       opts[:private_key_path] = ssl.private_key_path if ssl.private_key_path
       opts[:private_key_pass] = ssl.private_key_pass if ssl.private_key_pass
 
-      # https://github.com/geemus/typhoeus/issues/106
       # https://github.com/jruby/jruby-ossl/issues/19
       opts[:nonblock] = false
     end
