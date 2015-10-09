@@ -1,7 +1,7 @@
-require "excon"
+require "typhoeus"
 
-module HurleyExcon
-  VERSION = "0.0.1"
+module HurleyTyphoeus
+  VERSION = '0.0.1'
   METHODS = Hash.new do |hash, key|
     key.to_s.upcase
   end
@@ -28,11 +28,11 @@ module HurleyExcon
       configure_proxy(opts, request.options)
 
       Hurley::Response.new(request) do |res|
-        excon = perform(res, opts)
-        res.status_code = excon.status.to_i
-        res.header.update(excon.headers)
-        body = excon.body.to_s
-        res.receive_body(body) if !body.empty?
+        typhoeus = perform(res, opts)
+        res.status_code = typhoeus.code.to_i
+        res.header.update(typhoeus.headers)
+        body = typhoeus.response.to_s
+        res.receive_body(body) unless body.empty?
       end
     end
 
@@ -44,17 +44,19 @@ module HurleyExcon
         :headers => req.header,
         :response_block => lambda { |chunk, remaining, total|
           res.receive_body(chunk)
-        },
+        }
       }
+
+      puts req_options
 
       if body = req.body_io
         req_options[:request_block] = lambda do
-          body.read(Excon.defaults[:chunk_size]).to_s
+          body.read(Typhoeus.defaults[:chunk_size]).to_s
         end
       end
 
-      Excon.new(req.url.to_s, options.merge(@options)).request(req_options)
-    rescue ::Excon::Errors::SocketError => err
+      Typhoeus.get(req.url.to_s, req_options)
+    rescue ::Typhoeus::Errors::SocketError => err
       if err.message =~ /\btimeout\b/
         raise Hurley::Timeout, err
       elsif err.message =~ /\bcertificate\b/
@@ -62,7 +64,7 @@ module HurleyExcon
       else
         raise Hurley::ConnectionFailed, err
       end
-    rescue ::Excon::Errors::Timeout => err
+    rescue ::Typhoeus::Errors::Timeout => err
       raise Hurley::Timeout, err
     end
 
@@ -78,7 +80,7 @@ module HurleyExcon
       opts[:private_key_path] = ssl.private_key_path if ssl.private_key_path
       opts[:private_key_pass] = ssl.private_key_pass if ssl.private_key_pass
 
-      # https://github.com/geemus/excon/issues/106
+      # https://github.com/geemus/typhoeus/issues/106
       # https://github.com/jruby/jruby-ossl/issues/19
       opts[:nonblock] = false
     end

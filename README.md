@@ -1,9 +1,9 @@
-# Hurley-Excon
+# Hurley-Typhoeus
 
 ```ruby
 require "hurley"
-require "hurley-excon"
+require "hurley-typhoeus"
 
 client = Hurley::Client.new
-client.connection = HurleyExcon::Connection.new
+client.connection = HurleyTyphoeus::Connection.new
 ```

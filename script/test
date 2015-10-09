@@ -10,7 +10,7 @@
 #
 #   $ script/test
 #   $ script/test test/env_test.rb
-#   $ script/test excon typhoeus
+#   $ script/test typhoeus typhoeus
 #
 #   # Run only tests matching /ssl/ for the net_http adapter, with SSL enabled.
 #   $ HURLEY_SSL=1 script/test net_http -- -n /ssl/
