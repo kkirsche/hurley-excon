@@ -34,18 +34,18 @@ module HurleyTyphoeus
 
       request = Typhoeus::Request.new(req.url.to_s, req_options)
 
-      request.on_complete do |response|
-        if response.timed_out?
-          raise Hurley::Timeout, 'The request time' if response.timed_out?
-        end
-      end
+      # request.on_complete do |response|
+      #   if response.timed_out?
+      #     raise Hurley::Timeout, 'The request time' if response.timed_out?
+      #   end
+      # end
 
       if body = req.body_io
         body.read(HurleyTyphoeus::DEFAULT_CHUNK_SIZE).to_s
       end
 
       response = request.run
-      response
+      puts response.body
     rescue ::Typhoeus::Errors::TyphoeusError => err
       raise Hurley::ConnectionFailed, err
     end
