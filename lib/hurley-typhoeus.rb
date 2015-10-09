@@ -32,6 +32,8 @@ module HurleyTyphoeus
         :headers => req.header
       }
 
+      puts req.verb
+
       request = Typhoeus::Request.new(req.url.to_s, req_options)
 
       if body = req.body_io
