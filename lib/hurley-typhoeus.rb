@@ -35,14 +35,22 @@ module HurleyTyphoeus
       request = Typhoeus::Request.new(req.url.to_s, req_options)
 
       request.on_complete do |response|
-        raise Hurley::Timeout, 'The request time' if response.timed_out?
+        if response.success?
+          # hell yeah
+        elsif response.timed_out?
+          # aw hell no
+          raise Hurley::Timeout, 'The request time' if response.timed_out?
+        else
+          # Received a non-successful http response.
+          raise Hurley::ConnectionFailed, 'HTTP request failed: ' + response.code.to_s if response.timed_out?
+        end
       end
 
       if body = req.body_io
         body.read(HurleyTyphoeus::DEFAULT_CHUNK_SIZE).to_s
       end
 
-      response = request.run
+      request.run
     rescue ::Typhoeus::Errors::TyphoeusError => err
       if err.message =~ /\bcertificate\b/
         raise Hurley::SSLError, err
