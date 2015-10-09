@@ -24,7 +24,7 @@ module HurleyTyphoeus
       end
     end
 
-    def perform(res, _options)
+    def perform(res, options)
       req = res.request
 
       req_options = {
@@ -36,7 +36,7 @@ module HurleyTyphoeus
 
       request.on_complete do |response|
         if response.success?
-          # hell yeah
+          response
         elsif response.timed_out?
           # aw hell no
           raise Hurley::Timeout, 'The request time' if response.timed_out?
@@ -57,6 +57,7 @@ module HurleyTyphoeus
       else
         raise Hurley::ConnectionFailed, err
       end
+    rescue
     end
 
     def configure_ssl(opts, ssl)
