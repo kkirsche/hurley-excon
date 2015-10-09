@@ -2,19 +2,7 @@ require "typhoeus"
 
 module HurleyTyphoeus
   VERSION = '0.0.1'
-  METHODS = Hash.new do |hash, key|
-    key.to_s.upcase
-  end
-
-  METHODS.update(
-    :get => "GET",
-    :head => "HEAD",
-    :put => "PUT",
-    :post => "POST",
-    :patch => "PATCH",
-    :options => "OPTIONS",
-    :delete => "DELETE",
-  )
+  DEFAULT_CHUNK_SIZE = 1048576
 
   class Connection
     def initialize(options = nil)
@@ -31,8 +19,8 @@ module HurleyTyphoeus
         typhoeus = perform(res, opts)
         res.status_code = typhoeus.code.to_i
         res.header.update(typhoeus.headers)
-        body = typhoeus.response.to_s
-        res.receive_body(body) unless body.empty?
+        body = typhoeus.body.to_s
+        res.receive_body(body) if !body.empty?
       end
     end
 
@@ -40,23 +28,20 @@ module HurleyTyphoeus
       req = res.request
 
       req_options = {
-        :method  => METHODS[req.verb],
-        :headers => req.header,
-        :response_block => lambda { |chunk, remaining, total|
-          res.receive_body(chunk)
-        }
+        :method  => req.verb,
+        :headers => req.header
       }
 
-      puts req_options
+      request = Typhoeus::Request.new(req.url.to_s, req_options)
 
       if body = req.body_io
-        req_options[:request_block] = lambda do
-          body.read(Typhoeus.defaults[:chunk_size]).to_s
+        request.on_body do |chunk|
+          body.read(HurleyTyphoeus::DEFAULT_CHUNK_SIZE)
         end
       end
 
-      Typhoeus.get(req.url.to_s, req_options)
-    rescue ::Typhoeus::Errors::SocketError => err
+      request.run
+    rescue ::Typhoeus::Errors::TyphoeusError => err
       if err.message =~ /\btimeout\b/
         raise Hurley::Timeout, err
       elsif err.message =~ /\bcertificate\b/
@@ -64,8 +49,6 @@ module HurleyTyphoeus
       else
         raise Hurley::ConnectionFailed, err
       end
-    rescue ::Typhoeus::Errors::Timeout => err
-      raise Hurley::Timeout, err
     end
 
     def configure_ssl(opts, ssl)

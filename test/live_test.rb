@@ -1,8 +1,8 @@
-require "minitest/autorun"
-require "hurley"
-require "hurley/test"
-require "hurley/test/integration"
-require File.expand_path("../../lib/hurley-typhoeus", __FILE__)
+require 'minitest/autorun'
+require 'hurley'
+require 'hurley/test'
+require 'hurley/test/integration'
+require File.expand_path('../../lib/hurley-typhoeus', __FILE__)
 
 module HurleyTyphoeus
   class Test < MiniTest::Test
