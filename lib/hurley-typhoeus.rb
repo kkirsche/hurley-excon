@@ -29,23 +29,27 @@ module HurleyTyphoeus
 
       req_options = {
         :method  => req.verb,
-        :headers => req.header
+        :headers => req.header,
+        :followlocation => true
       }
 
       request = Typhoeus::Request.new(req.url.to_s, req_options)
 
-      # request.on_complete do |response|
-      #   if response.timed_out?
-      #     raise Hurley::Timeout, 'The request time' if response.timed_out?
-      #   end
-      # end
+      request.on_complete do |response|
+        case true
+        when response.success?
+          response
+        when response.timed_out?
+          raise Hurley::Timeout, 'The request time'
+        end
+      end
 
       if body = req.body_io
         body.read(HurleyTyphoeus::DEFAULT_CHUNK_SIZE).to_s
       end
 
       response = request.run
-      puts response.body
+      response
     rescue ::Typhoeus::Errors::TyphoeusError => err
       raise Hurley::ConnectionFailed, err
     end
