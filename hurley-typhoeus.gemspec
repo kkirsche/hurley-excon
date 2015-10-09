@@ -20,6 +20,7 @@ Gem::Specification.new do |spec|
   spec.version = version
 
   spec.add_development_dependency 'sinatra', '~> 1.4'
+  spec.add_development_dependency 'minitest', '~> 5.8'
 
   spec.add_runtime_dependency 'typhoeus', '~> 0'
   spec.add_runtime_dependency 'hurley', '~> 0'
