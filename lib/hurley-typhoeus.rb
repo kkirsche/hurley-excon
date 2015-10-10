@@ -30,15 +30,15 @@ module HurleyTyphoeus
       req_options = {
         :method  => req.verb,
         :headers => req.header,
+        :body => req.body,
         :ssl_verifypeer => false,
         :followlocation => true,
-        :connecttimeout => 10000000000000
+        :connecttimeout => 60
       }
 
       request = Typhoeus::Request.new(req.url.to_s, req_options)
 
       request.on_complete do |response|
-        puts response
         if response.timed_out?
           raise Hurley::Timeout, 'The request timed out.'
         end
