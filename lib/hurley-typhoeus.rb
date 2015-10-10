@@ -31,10 +31,11 @@ module HurleyTyphoeus
         :method  => req.verb,
         :headers => req.header,
         :body => req.body,
-        :ssl_verifypeer => false,
         :followlocation => true,
         :connecttimeout => 60
       }
+
+      req_options.merge! options
 
       request = Typhoeus::Request.new(req.url.to_s, req_options)
 
@@ -64,7 +65,7 @@ module HurleyTyphoeus
     end
 
     def configure_ssl(opts, ssl)
-      opts[:ssl_verify_peer] = !ssl.skip_verification?
+      opts[:ssl_verifypeer] = !ssl.skip_verification?
       opts[:ssl_ca_path] = ssl.ca_path if ssl.ca_path
       opts[:ssl_ca_file] = ssl.ca_file if ssl.ca_file
 
@@ -76,30 +77,26 @@ module HurleyTyphoeus
       opts[:private_key_pass] = ssl.private_key_pass if ssl.private_key_pass
 
       # https://github.com/jruby/jruby-ossl/issues/19
-      opts[:nonblock] = false
+      # opts[:nonblock] = false
     end
 
     def configure_request(opts, options)
       if t = options.timeout
-        opts[:read_timeout] = t
-        opts[:connect_timeout] = t
-        opts[:write_timeout] = t
+        opts[:connecttimeout] = t
+        opts[:timeout] = t
       end
 
       if t = options.open_timeout
-        opts[:connect_timeout] = t
-        opts[:write_timeout] = t
+        opts[:connecttimeout] = t
+        opts[:timeout] = t
       end
     end
 
     def configure_proxy(opts, options)
       return unless proxy = options.proxy
       opts[:proxy] = {
-        :host => proxy.host,
-        :port => proxy.port,
-        :scheme => proxy.scheme,
-        :user => proxy.user,
-        :password => proxy.password,
+        :proxy => "#{proxy.scheme}://#{proxy.host}:#{proxy.port}",
+        :proxyuserpwd => "#{proxy.user}:#{proxy.password}"
       }
     end
   end
